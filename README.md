@@ -1,184 +1,351 @@
-# ⚡ Brightloop — Advanced Subscription Management Platform
+# Brightloop — Subscription Management System
 
-> A modern, production-grade subscription lifecycle, recurring billing engine, and financial operations suite engineered for high-growth B2B SaaS.
+A subscription management and recurring billing platform built for the hackathon. Brightloop helps businesses manage products, subscription plans, quotations, recurring invoices, payments, and customer accounts from a centralized dashboard.
 
-Built for the Hackathon with enterprise rigor: real database persistence, exact monetary math, calendar intelligence, customer self-service isolation, and verified AI financial queries.
+The project focuses on modular architecture, accurate financial calculations, automated billing workflows, role-based access control, and customer self-service.
 
----
+## Table of Contents
 
-## 🌟 Executive Summary & Key Differentiators
+* [Overview](#overview)
+* [Key Features](#key-features)
+* [User Roles](#user-roles)
+* [Technology Stack](#technology-stack)
+* [Project Architecture](#project-architecture)
+* [Getting Started](#getting-started)
+* [Environment Configuration](#environment-configuration)
+* [Database Setup](#database-setup)
+* [Running the Application](#running-the-application)
+* [Testing](#testing)
+* [Core Workflows](#core-workflows)
+* [Security Considerations](#security-considerations)
+* [Future Improvements](#future-improvements)
 
-Unlike static frontend prototypes or toy CRUD templates, **Brightloop** implements a complete recurring billing and accounts receivable operating system:
+## Overview
 
-1. **Exact Decimal Precision (Zero Floating-Point Drift)**:
-   - All currencies, tax calculations, discounts, unit prices, and balances are stored as `@db.Decimal(12, 2)` in PostgreSQL and computed using `Decimal.js`.
-   - Complete immunity to IEEE-754 precision bugs (e.g. `0.1 + 0.2 = 0.30000000000000004`).
+Brightloop is designed to simplify subscription-based business operations by bringing subscription management, billing, invoicing, and payment tracking into one application.
 
-2. **Calendar-Aware Recurring Billing Engine**:
-   - Accounts for 28, 29, 30, and 31-day months.
-   - Handles month-end rollovers: a subscription starting on January 31st bills on February 28th (or 29th on leap years), then rolls to March 31st and April 30th without skipping or corrupting dates.
-   - Enforces unique period constraints `[subscriptionId, billingPeriodStart]` for 100% idempotent batch execution.
+The system supports the subscription lifecycle, from quotation creation and conversion to recurring billing and payment settlement.
 
-3. **Multi-Tenant Role-Based Access Control (RBAC)**:
-   - `ADMIN`: Complete CRUD on products, pricing variants, subscription plans, billing runs, and platform configuration.
-   - `STAFF`: Quotations, customer onboarding, invoice recording, and operational monitoring.
-   - `CUSTOMER`: Strict customer isolation. Customer sessions are routed to `/portal` and cannot view peer invoices, contracts, or administrative endpoints.
+It also includes financial analytics and operational tools to help administrators monitor subscriptions, outstanding invoices, and expected revenue.
 
-4. **Intelligent Financial Modules**:
-   - **Subscription Health Center**: Real-time alerts for impending renewals (<7 days), failed transaction attempts, and overdue invoices with 1-click dunning notifications.
-   - **Revenue Forecast**: Algorithmic ARR and MRR projections combining active contracts, churn discount factors, and renewal schedules.
-   - **Smart Collection Priority**: Multi-factor scoring model that ranks overdue customer accounts by debt age, outstanding volume, and plan tier.
-   - **Grounded AI Financial Assistant**: Natural-language finance interface answering questions using deterministic database aggregations (zero fabricated metrics).
+## Key Features
 
----
+### 1. Product and Subscription Management
 
-## 🚀 Quick Launch & Demo Credentials
+* Product catalog and pricing variants.
+* Configurable subscription plans.
+* Support for different billing intervals.
+* Subscription lifecycle management, including pausing, resuming, and closing subscriptions.
 
-Brightloop comes pre-seeded with 21 customer accounts, 4 product lines with variants, 5 tiered subscription plans, tax rules, discount rules, active subscriptions, and invoice history.
+### 2. Quotation Management
 
-### 1-Click Role Switcher
-Visit `/login` and click any of the 1-click test buttons to instantly switch active roles:
+* Create quotations for customers.
+* Apply discounts and tax rules.
+* Convert accepted quotations into subscriptions.
+* Track quotation and subscription statuses.
 
-| Role | Email | Password | Access Scope |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin@brightloop.io` | `Brightloop@2026!` | Full Admin & Operations Dashboard (`/dashboard`) |
-| **Staff** | `priya.sharma@brightloop.io` | `Brightloop@2026!` | Operations, Quotations, Invoices (`/dashboard`) |
-| **Customer** | `rahul.verma@apexcloud.io` | `Brightloop@2026!` | Customer Self-Service Portal (`/portal`) |
+### 3. Recurring Billing and Invoices
 
----
+* Preview subscriptions due for billing.
+* Generate recurring invoices.
+* Calculate billing dates using calendar-aware logic.
+* Prevent duplicate billing for the same subscription period.
+* Track invoice balances and payment statuses.
 
-## 🏛 Architecture & Tech Stack
+### 4. Payment Management
 
-```
-d:\odoo_project
+* Record payments against invoices.
+* Support partial payments and outstanding balances.
+* Track payment references and transaction history.
+* Update invoice statuses as balances are settled.
+
+### 5. Financial Dashboard and Analytics
+
+* Monitor key financial indicators.
+* View subscription and invoice information.
+* Explore revenue forecasts.
+* Prioritize overdue accounts.
+* Monitor subscription health and upcoming renewals.
+
+### 6. Customer Self-Service Portal
+
+* View personal subscriptions.
+* Access invoice history.
+* Review payment information.
+* Manage available account and billing details.
+
+### 7. AI Financial Assistant
+
+* Ask questions about supported financial data.
+* Retrieve answers based on available database information and calculations.
+
+### 8. Automated Testing
+
+* Unit tests for financial calculations.
+* Tests for billing-date logic.
+* Tests for role-based access control.
+* Integration tests for subscription and payment workflows.
+
+## User Roles
+
+| Role     | Main Responsibilities                                                                         |
+| -------- | --------------------------------------------------------------------------------------------- |
+| Admin    | Manage products, plans, billing operations, and platform settings.                            |
+| Staff    | Handle quotations, customer onboarding, invoices, and operational activities.                 |
+| Customer | Access personal subscriptions, invoices, and payment information through the customer portal. |
+
+Access should be restricted according to each user's assigned role and ownership of customer records.
+
+## Technology Stack
+
+The current project documentation identifies the following technologies:
+
+| Technology   | Purpose                           |
+| ------------ | --------------------------------- |
+| Next.js      | Application framework             |
+| React        | User interface                    |
+| TypeScript   | Type-safe application development |
+| PostgreSQL   | Relational database               |
+| Prisma ORM   | Database schema and data access   |
+| Decimal.js   | Accurate monetary calculations    |
+| Vitest       | Automated testing                 |
+| Tailwind CSS | UI styling                        |
+
+Confirm the versions and dependencies against `package.json` before publishing the final documentation.
+
+## Project Architecture
+
+The project follows a modular structure that separates application pages, reusable components, business logic, database configuration, and tests.
+
+```text
+odoo_project/
 ├── app/
-│   ├── (auth)/login/             # 1-Click Role switcher & JWT authentication
-│   ├── dashboard/                # Admin & Staff back-office management suite
-│   │   ├── analytics/            # Deep-dive SaaS metrics & cohorts
-│   │   ├── assistant/            # Grounded AI Finance Assistant
-│   │   ├── billing-preview/      # Dry-run preview & batch billing runner
-│   │   ├── collections/          # Smart Collection Priority scoring
-│   │   ├── customers/            # Customer directory & profile management
-│   │   ├── discounts/            # Promo rules, usage limits & caps
-│   │   ├── forecast/             # Revenue & cash flow projection
-│   │   ├── health/               # Subscription Health Center
-│   │   ├── invoices/             # Invoice ledger & printable PDF view
-│   │   │   └── [id]/             # Printable invoice receipt (A4 format)
-│   │   ├── notifications/        # In-app event activity stream
-│   │   ├── payments/             # Atomic payment recording & ledger
-│   │   ├── plans/                # Subscription plans & interval rules
-│   │   ├── products/             # Catalog & pricing variants
-│   │   ├── quotations/           # Quotation generation & conversion
-│   │   ├── settings/             # System settings & billing policy
-│   │   └── subscriptions/        # Lifecycle management (Pause/Resume/Close)
-│   ├── portal/                   # Customer Self-Service Portal (Isolated)
-│   │   ├── invoices/             # Customer invoice history & downloads
-│   │   ├── payments/             # Customer receipt verification
-│   │   ├── profile/              # Billing address & contact information
-│   │   └── subscriptions/        # Active plans & cancellation requests
-│   ├── api/                      # REST API endpoints with RBAC guards
-│   └── page.tsx                  # Showcase landing page
-├── components/                   # Modular UI kit & Recharts visualizers
+│   ├── (auth)/
+│   │   └── login/
+│   ├── dashboard/
+│   │   ├── analytics/
+│   │   ├── assistant/
+│   │   ├── billing-preview/
+│   │   ├── collections/
+│   │   ├── customers/
+│   │   ├── discounts/
+│   │   ├── forecast/
+│   │   ├── health/
+│   │   ├── invoices/
+│   │   ├── notifications/
+│   │   ├── payments/
+│   │   ├── plans/
+│   │   ├── products/
+│   │   ├── quotations/
+│   │   ├── settings/
+│   │   └── subscriptions/
+│   ├── portal/
+│   │   ├── invoices/
+│   │   ├── payments/
+│   │   ├── profile/
+│   │   └── subscriptions/
+│   ├── api/
+│   └── page.tsx
+├── components/
 ├── lib/
-│   ├── calculations/financial.ts # Decimal.js monetary math engine
-│   ├── dates/billing-dates.ts    # Calendar & leap-year billing engine
-│   ├── auth/session.ts           # Jose JWT tokens & HTTP-only cookies
-│   └── permissions/rbac.ts       # Role guards & customer ownership rules
+│   ├── calculations/
+│   ├── dates/
+│   ├── auth/
+│   └── permissions/
 ├── prisma/
-│   ├── schema.prisma             # PostgreSQL schema with Decimal precision
-│   └── seed.ts                   # Deterministic hackathon demo dataset
-└── tests/
-    ├── unit/                     # Unit test suites (Financial, Dates, RBAC)
-    └── integration/              # End-to-end lifecycle integration tests
+│   ├── schema.prisma
+│   └── seed.ts
+├── services/
+├── tests/
+│   ├── unit/
+│   └── integration/
+├── public/
+├── .env.example
+├── .gitignore
+├── package.json
+└── README.md
 ```
 
----
+This is a logical overview. Some directories or files may differ in the current repository.
 
-## 🧪 Automated Test Suite (38/38 Tests Passing)
+### Main Directories
 
-Brightloop includes comprehensive unit and integration tests powered by **Vitest**:
+* `app/` — Application pages, dashboards, customer portal, and API routes.
+* `components/` — Reusable interface components and forms.
+* `lib/` — Shared utilities, financial calculations, date logic, and access-control helpers.
+* `services/` — Business logic for subscriptions, billing, payments, and related operations.
+* `prisma/` — Database schema and demo-data seeding.
+* `tests/` — Unit and integration tests.
 
-```bash
-# Run all automated test suites
-npm test
-```
-
-### Verified Test Suites:
-- `tests/unit/financial.test.ts`: Decimal line item arithmetic, variant price calculations (override vs additive), tax inclusiveness, discount clamping, and balance settlements.
-- `tests/unit/billing-dates.test.ts`: Month-end rollovers (Jan 31 -> Feb 28 -> Mar 31), leap year February 29 preservation, interval step math, and due date checks.
-- `tests/unit/rbac.test.ts`: Role-based route boundaries and customer ownership isolation.
-- `tests/integration/lifecycle.test.ts`: Complete lifecycle:
-  1. Quotation creation with tax & discount calculation.
-  2. Idempotent quotation conversion to active subscription.
-  3. Recurring billing engine execution with idempotency & duplicate prevention.
-  4. Partial payment recording (`PARTIALLY_PAID`) followed by balance settlement (`PAID`).
-  5. Discount rule coupon validation and usage limit enforcement.
-
----
-
-## 🔧 Local Development & Installation
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ (Tested on Node.js 24)
-- PostgreSQL 16 (Portable instance bundled in `.db/pgsql` or external PostgreSQL)
 
-### 1. Install Dependencies
+Install the following software:
+
+* Node.js compatible with the project's dependencies.
+* npm.
+* PostgreSQL 16, or another supported PostgreSQL version.
+* Git.
+
+### 1. Clone the Repository
+
+```bash
+git clone <YOUR-GITHUB-REPOSITORY-URL>
+cd odoo_project
+```
+
+Replace the placeholder with your actual repository URL.
+
+### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-### 2. Configure Database
-Set your `DATABASE_URL` in `.env`:
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/brightloop?schema=public"
-JWT_SECRET="brightloop-super-secret-jwt-key-2026-production"
-```
+### 3. Configure Environment Variables
 
-### 3. Sync Database Schema & Generate Prisma Client
+Create a local `.env` file based on `.env.example`.
+
+Configure the database connection and authentication secret using your local development values.
+
+**Never commit `.env` or real credentials to GitHub.**
+
+### 4. Prepare the Database
+
+After configuring the database connection, run:
+
 ```bash
-npx prisma db push
 npx prisma generate
+npx prisma db push
 ```
 
-### 4. Seed Deterministic Demo Data
+Use these commands only after confirming that `DATABASE_URL` points to the intended development database.
+
+### 5. Load Demo Data
+
+If you want to populate the database with sample data, run:
+
 ```bash
 npx tsx prisma/seed.ts
 ```
 
-### 5. Start Development Server
+Run the seed script only after reviewing what it creates or modifies. Do not run it against a database containing data you need to preserve.
+
+### 6. Start the Development Server
+
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+Open the following address in your browser:
+
+http://localhost:3000
+
+## Environment Configuration
+
+Create an `.env.example` file containing placeholders similar to the following:
+
+```dotenv
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME?schema=public"
+JWT_SECRET="REPLACE_WITH_A_SECURE_RANDOM_SECRET"
+```
+
+Adjust the variable names and database configuration to match the application's actual requirements.
+
+For local development:
+
+1. Copy `.env.example` to `.env`.
+2. Replace the placeholders with local configuration values.
+3. Generate a strong, private authentication secret.
+4. Keep `.env` out of version control.
+
+Do not use example credentials or authentication secrets in a public deployment.
+
+## Testing
+
+The project includes unit and integration test files.
+
+Run the automated test suite with:
+
+```bash
+npm test
+```
+
+The existing project documentation identifies these test areas:
+
+* Financial calculations and monetary precision.
+* Subscription billing dates and calendar boundaries.
+* Role-based access control.
+* Quotation-to-subscription conversion.
+* Recurring billing and duplicate prevention.
+* Partial payments and invoice settlement.
+* Discount validation and usage limits.
+
+Test results should be verified against the current code before reporting a passing test count.
+
+## Core Workflows
+
+### 1. Quotation to Subscription
+
+1. Create a quotation for a customer.
+2. Add products, prices, taxes, and discounts.
+3. Accept the quotation.
+4. Convert it into a subscription.
+5. Verify the subscription status and next billing date.
+
+### 2. Recurring Billing
+
+1. Preview subscriptions due for billing.
+2. Review the billing preview.
+3. Execute the billing operation.
+4. Verify that invoices are created.
+5. Check that the next billing dates advance correctly.
+6. Confirm that repeating the operation does not create duplicate invoices for the same billing period.
+
+### 3. Payment and Settlement
+
+1. Open an outstanding invoice.
+2. Record a test payment.
+3. Verify the payment record and remaining balance.
+4. Record an additional payment if the invoice is only partially paid.
+5. Confirm that the invoice status reflects its remaining balance.
+
+Use simulated payments while testing.
+
+## Security Considerations
+
+The application is intended to enforce role-based access and customer data isolation.
+
+Before deploying or presenting it as production-ready, verify:
+
+* Server-side authorization for protected pages and API routes.
+* Customer ownership checks for invoices, subscriptions, and payments.
+* Secure handling of authentication tokens and cookies.
+* Protection of environment variables and database credentials.
+* Validation of user input and monetary values.
+* Appropriate error handling and audit logging.
+* Security of billing and payment operations.
+
+A feature's presence in the code does not, by itself, prove that it is secure. These controls should be tested.
+
+## Future Improvements
+
+Potential areas for future development include:
+
+* Additional automated tests for authorization and billing edge cases.
+* Improved reporting and financial analytics.
+* More comprehensive billing failure notifications.
+* Payment gateway integration using a supported test environment.
+* Improved deployment and monitoring documentation.
+* Further performance testing with larger datasets.
+
+## Project Information
+
+**Project:** Brightloop Subscription Management System
+**Purpose:** Hackathon project
+**Repository:** See the GitHub repository containing this README.
 
 ---
 
-## 📊 Core Business Workflows
-
-### 1. Quotation to Subscription Conversion
-- Sales creates a Quotation with custom lines, discounts, and tax rates.
-- Upon customer confirmation, `convertQuotationToSubscription(id)` atomically transitions the quotation to `ACCEPTED`, generates an `ACTIVE` subscription, calculates the next billing date, and links the subscription lines.
-- The conversion is **strictly idempotent**: calling it multiple times returns the existing subscription without generating duplicates.
-
-### 2. Idempotent Recurring Billing Run
-- The recurring billing engine evaluates subscriptions where `nextBillingDate <= asOfDate`.
-- `previewDueBilling(asOfDate)` generates a risk-free dry-run summary.
-- `executeRecurringBillingBatch(asOfDate)` generates invoices, advances `nextBillingDate` using calendar-aware interval logic, creates an audit log, and notifies the customer.
-- If a billing run is triggered twice, database unique constraints and idempotency checks automatically flag existing periods as `SKIPPED`.
-
-### 3. Partial Payments & Balance Tracking
-- Payments are recorded atomically with unique sequence references (`PAY-2026-XXXX-XXXX`).
-- Paying less than the grand total marks the invoice as `PARTIALLY_PAID`.
-- Paying the remaining outstanding balance automatically transitions the invoice to `PAID` with zero balance.
-
----
-
-## 🛡 Security & Compliance
-
-- **HTTP-Only Cookies**: JWT tokens are signed with HMAC-SHA256 and stored in secure, `HttpOnly`, `SameSite=Lax` cookies.
-- **Ownership Verification**: API routes and server actions verify that customer users can only read or mutate records matching their `customerId`.
-- **Audit Trails**: Critical operations (billing runs, status modifications, payment records) log immutable records to `AuditLog`.
-
----
-
-© 2026 Brightloop Software Inc. All rights reserved. Hackathon Demonstration Release.
+*Documentation should be updated as the project evolves. Feature descriptions, setup instructions, and test results should reflect the current implementation.*
