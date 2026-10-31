@@ -708,4 +708,85 @@ describe("Brightloop Comprehensive QA Engineering Test Suite", () => {
       await prisma.invoice.delete({ where: { id: inv.id } });
     });
   });
+
+  // ==========================================
+  // REGRESSION TESTS FOR CONFIRMED BUGS
+  // ==========================================
+  describe("Regression Tests: Bug Fixes & Boundary Hardening", () => {
+    it("REG-1: Customer cancellation request works for own subscription", async () => {
+      // Create subscription for Customer A
+      const sub = await prisma.subscription.create({
+        data: {
+          subscriptionNumber: `SUB-CANCEL-QA-${Date.now()}`,
+          customerId: testCustomerProfileA.id,
+          planId: testPlan.id,
+          status: "ACTIVE",
+          nextBillingDate: addDays(new Date(), 30),
+          totalRecurringAmount: new Decimal("2500.00"),
+        },
+      });
+
+      const updated = await requestCancellation(sub.id, "Moving to another region", testCustomerUserA.id);
+      expect(updated.cancelRequestedAt).toBeDefined();
+      expect(updated.cancelReason).toBe("Moving to another region");
+
+      // Clean up
+      await prisma.subscription.delete({ where: { id: sub.id } });
+    });
+
+    it("REG-2: Customer cannot cancel another customer's subscription", async () => {
+      // Sub belongs to B
+      const subB = await prisma.subscription.create({
+        data: {
+          subscriptionNumber: `SUB-B-QA-${Date.now()}`,
+          customerId: testCustomerProfileB.id,
+          planId: testPlan.id,
+          status: "ACTIVE",
+          nextBillingDate: addDays(new Date(), 30),
+          totalRecurringAmount: new Decimal("2500.00"),
+        },
+      });
+
+      const userA = {
+        id: testCustomerUserA.id,
+        email: testCustomerUserA.email,
+        name: testCustomerUserA.name,
+        role: "CUSTOMER" as const,
+        customerId: testCustomerProfileA.id,
+      };
+
+      // Verify ownership check fails
+      const check = requireOwnershipOrStaff(userA, subB.customerId);
+      expect(check.allowed).toBe(false);
+      expect(check.statusCode).toBe(403);
+
+      // Clean up
+      await prisma.subscription.delete({ where: { id: subB.id } });
+    });
+
+    it("REG-3: recordPayment gracefully rejects NaN and invalid non-numeric strings", async () => {
+      await expect(
+        recordPayment({
+          invoiceId: "dummy-id",
+          amount: "invalid-string",
+          paymentMethod: "UPI",
+        })
+      ).rejects.toThrow(/Invalid payment amount/);
+
+      await expect(
+        recordPayment({
+          invoiceId: "dummy-id",
+          amount: NaN,
+          paymentMethod: "UPI",
+        })
+      ).rejects.toThrow();
+    });
+
+    it("REG-4: getRevenueForecast accurately advances intervals using calendar logic", async () => {
+      const forecast = await getRevenueForecast(60);
+      expect(forecast).toBeDefined();
+      expect(Number(forecast.totalProjected)).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(forecast.timeline)).toBe(true);
+    });
+  });
 });

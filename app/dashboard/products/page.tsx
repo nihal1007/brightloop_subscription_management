@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { Package, Plus, Tag, Check, Layers, ArrowRight } from "lucide-react";
 import { calculateVariantPrice } from "@/lib/calculations/financial";
+import { NewProductModal } from "@/components/products/new-product-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +36,7 @@ export default async function ProductsPage() {
           </p>
         </div>
 
-        <Button size="sm" className="gap-1.5 shadow-sm">
-          <Plus className="h-3.5 w-3.5" />
-          <span>New Product</span>
-        </Button>
+        <NewProductModal />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -6,18 +6,30 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { FileSpreadsheet, Plus, Calendar, User, ArrowRight } from "lucide-react";
 import { ConvertQuotationButton } from "@/components/quotations/quotation-actions";
+import { NewQuotationModal } from "@/components/quotations/new-quotation-modal";
 
 export const dynamic = "force-dynamic";
 
 export default async function QuotationsPage() {
-  const quotations = await prisma.quotation.findMany({
-    include: {
-      customer: true,
-      plan: true,
-      lines: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [quotations, customers, plans] = await Promise.all([
+    prisma.quotation.findMany({
+      include: {
+        customer: true,
+        plan: true,
+        lines: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.customerProfile.findMany({
+      select: { id: true, companyName: true, customerNumber: true },
+      orderBy: { companyName: "asc" },
+    }),
+    prisma.subscriptionPlan.findMany({
+      where: { active: true },
+      select: { id: true, name: true, basePrice: true, billingInterval: true },
+      orderBy: { basePrice: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -31,10 +43,7 @@ export default async function QuotationsPage() {
           </p>
         </div>
 
-        <Button size="sm" className="gap-1.5 shadow-sm">
-          <Plus className="h-3.5 w-3.5" />
-          <span>New Quotation</span>
-        </Button>
+        <NewQuotationModal customers={customers} plans={plans} />
       </div>
 
       <Card>

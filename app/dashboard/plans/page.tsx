@@ -5,23 +5,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Layers, Plus, Check, Calendar, Repeat, PauseCircle, Clock } from "lucide-react";
+import { NewPlanModal } from "@/components/plans/new-plan-modal";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlansPage() {
-  const plans = await prisma.subscriptionPlan.findMany({
-    include: {
-      planProducts: {
-        include: { product: true },
-      },
-      _count: {
-        select: {
-          subscriptions: { where: { status: "ACTIVE" } },
+  const [plans, products] = await Promise.all([
+    prisma.subscriptionPlan.findMany({
+      include: {
+        planProducts: {
+          include: { product: true },
+        },
+        _count: {
+          select: {
+            subscriptions: { where: { status: "ACTIVE" } },
+          },
         },
       },
-    },
-    orderBy: { basePrice: "asc" },
-  });
+      orderBy: { basePrice: "asc" },
+    }),
+    prisma.product.findMany({
+      where: { active: true },
+      select: { id: true, name: true, productCode: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -35,10 +43,7 @@ export default async function PlansPage() {
           </p>
         </div>
 
-        <Button size="sm" className="gap-1.5 shadow-sm">
-          <Plus className="h-3.5 w-3.5" />
-          <span>New Subscription Plan</span>
-        </Button>
+        <NewPlanModal availableProducts={products} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

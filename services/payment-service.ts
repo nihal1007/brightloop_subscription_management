@@ -14,8 +14,13 @@ export interface RecordPaymentInput {
 }
 
 export async function recordPayment(input: RecordPaymentInput) {
-  const payAmount = new Decimal(input.amount);
-  if (payAmount.lessThanOrEqualTo(0)) {
+  let payAmount: Decimal;
+  try {
+    payAmount = new Decimal(input.amount);
+  } catch {
+    throw new Error("Invalid payment amount.");
+  }
+  if (payAmount.isNaN() || payAmount.lessThanOrEqualTo(0)) {
     throw new Error("Payment amount must be greater than zero.");
   }
 

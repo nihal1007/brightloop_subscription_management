@@ -11,11 +11,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: guard.error }, { status: guard.statusCode || 403 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
+
+    if (!body?.invoiceId) {
+      return NextResponse.json({ error: "Invoice ID is required." }, { status: 400 });
+    }
+
+    if (body?.amount === undefined || body?.amount === null || isNaN(Number(body.amount)) || Number(body.amount) <= 0) {
+      return NextResponse.json({ error: "A valid positive payment amount is required." }, { status: 400 });
+    }
+
     const payment = await recordPayment({
       invoiceId: body.invoiceId,
       amount: body.amount,
-      paymentMethod: body.paymentMethod,
+      paymentMethod: body.paymentMethod || "BANK_TRANSFER",
       externalReference: body.externalReference,
       notes: body.notes,
       recordedByUserId: user?.id,
